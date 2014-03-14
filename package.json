@@ -1,0 +1,10 @@
+{
+  "name": "encml",
+  "version": "1.0.0",
+  "description": "HTML file encryption using SJCL and AES-256, decrypted client-side",
+  "main": "./encml",
+  "dependencies": {
+    "yargs": "*",
+    "sjcl" : "*"
+  }
+}

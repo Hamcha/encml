@@ -1,0 +1,34 @@
+#!/usr/bin/env node
+var sjcl = require("sjcl");
+var fs   = require('fs');
+var argv = require("yargs")
+	.usage("Encrypts a HTML file by requiring the key to be provided in location.hash")
+	.demand("in")
+	.alias("i","in")
+	.describe("in","Input HTML file")
+	.describe("out", "Output HTML file, if omitted outputs to STDOUT")
+	.describe("key", "Encryption Key (AES-256), randomly generated if omitted")
+	.argv;
+
+makekey = function (l) {
+  var text = "";
+  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  for( var i=0; i < l; i++ )
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  return text;
+};
+
+indat = fs.readFileSync(argv.i).toString();
+
+var payload= '<!doctype html><htm'+'l><head><script src="https://cdn.jsdelivr.net/sjcl/1.0.0/sjcl.js"></script><script>window.onload=function(){var a=@@KEY@@,b=location.hash.substring(1);try{document.write(sjcl.decrypt(b,JSON.stringify(a)))}catch(c){document.write("This document is encrypted. If you don\'t have the key, please leave.")}};</script></head></html>';
+var key = argv.key ? argv.key : makekey(30);
+var def = { ks : 256, iter: 1000, mode: "ccm", ts: 64, v: 1, cipher: "aes" };
+var b = sjcl.encrypt(key,indat,def);
+var data = payload.replace("@@KEY@@",b);
+
+if (argv.out)
+	fs.writeFileSync(argv.out, data);
+else
+	console.log(data);
+
+console.log("\nEncrypted with key: "+key);
